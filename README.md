@@ -1,37 +1,41 @@
-```bash
-/
+# Utility Scripts
+
+This project provides a collection of utility scripts that can be easily run from CMD or PowerShell. By adding the `run` directory to your *User Environment* PATH variable, all scripts become accessible from anywhere in your terminal.
+
+## Project Structure
+
+```
+Root
+│   .gitignore
+│   generate.cmd
 │   README.md
 │   
-├───crypto
-│       brute_force_affine.py
-│       README.md
-│       SolarPuttyDecrypt.py
+├───draft
+│       script_name_in_draft.py
 │       
-├───cve
-│       CVE-2023-30253.py
-│       README.md
+├───run
+│       script_name.cmd
 │       
-├───etc
-│       ghidra_auto.py
-│       README.md
-│       textToImageOneLiner.py
-│       unmerge_images.py
-│       xml2csv.py
-│       
-├───google_app_script
-│       ColorCodeTableExtension.gs
-│       README.md
-│       
-├───macro
-│   └───atm9tts
-│           README.md
-│           right_click_hold.py
-│           right_click_hold_and_shift.py
-│           right_click_toggle.py
-│           
-└───shell
-        cmd.cgi
-        README.md
-        simple_fancy_webshell.php
-        vibe_webshell.php
+└───src
+        script_name.py
 ```
+
+### Directory Purpose
+
+- **src**: Contains production-ready scripts
+- **run**: Contains generated command files for executing scripts
+- **draft**: Storage for scripts under development
+
+## Getting Started
+
+1. Clone this repository
+2. Add the `run` directory to your PATH environment variable
+3. Create Python scripts in the `src` directory
+4. Run `.\generate.cmd` to generate command files
+5. Access any script directly from your command line by typing its name
+
+## Development Workflow
+
+1. Create or modify a Python script in `src` directory
+2. Run `.\generate.cmd` to update command files
+3. Your script is now available as `script_name.cmd` from any terminal
