@@ -16,7 +16,7 @@ class JiraConfig:
     COMPONENT = 'Benign Positive - Suspicious but expected'
     TIME_SPENT = 300 # 5 minutes
     STORY_POINTS = 0.005
-    STORY_POINTS_FIELD = 'customfield_12345'
+    STORY_POINTS_FIELD = 'customfield_10024'
 
 class JiraProcessor:
     """A class for processing Jira tickets."""
@@ -59,11 +59,6 @@ class JiraProcessor:
         transitions = {'To Do': 11, 'In Progress': 21, 'Done': 31, 'Backlog': 41, 'Canceled': 101, 'Waiting For Deployment': 111, 'Blocked': 121}
 
         try:
-            # transitions = self.jira.transitions(issue)
-            # transition = next((t for t in transitions if t['name'] == transition_name), None)
-            # if transition:
-            #     self.jira.transition_issue(issue, transition['id'])
-            #     logging.info(f'Moved ticket {issue.key} to {transition_name} [{transition["id"]}]')
             transition = transitions.get(transition_name)
             if transition:
                 self.jira.transition_issue(issue, transition)
@@ -92,6 +87,15 @@ class JiraProcessor:
             logging.error(f'Failed to set component for ticket {issue.key}: {e}')
             raise
 
+    def set_parent(self, issue, parent_key):
+        """Sets the parent of a Jira issue."""
+        try:
+            issue.update(fields={'parent': {'key': parent_key}})
+            logging.info(f'Set parent of {issue.key} to {parent_key}')
+        except Exception as e:
+            logging.error(f'Failed to set parent for ticket {issue.key}: {e}')
+            raise
+
     def add_comment(self, issue, comment):
         """Adds a comment to a Jira issue."""
         try:
@@ -110,14 +114,22 @@ class JiraProcessor:
             logging.error(f"Failed to add worklog to ticket {issue.key}: {e}")
             raise
 
-    def process_issue(self, issue, comment, user, component, time, story):
+    def process_issue(self, issue, comment, user, component, time, story, parent=None):
         """Processes a Jira ticket."""
         try:
+            transition_name = issue.fields.status.name
+            logging.info(f'Processing issue {issue.key} with current status: {transition_name}')
+    
+            # Assign the parent issue if provided
+            if parent:
+                self.set_parent(issue, parent)
+
             # Assign the issue to a user
             self.assign_issue(issue, user)
             
             # Transition the issue to Backlog
-            self.transition_issue(issue, 'Backlog') 
+            if transition_name != 'Backlog':
+                self.transition_issue(issue, 'Backlog') 
 
             # Set the story points
             self.set_story_points(issue, story)
@@ -231,6 +243,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--time', help='Time spent in seconds.', default=JiraConfig.TIME_SPENT)
     parser.add_argument('-s', '--story', help='Story points assigned.', default=JiraConfig.STORY_POINTS)
     parser.add_argument('-d', '--dry', help='Dry run, only show ticket data.', default=False, action='store_true')
+    parser.add_argument('-p', '--parent', help='Parent ticket key to set for the issue.', default=None)
 
     args = parser.parse_args()
 
@@ -251,5 +264,4 @@ if __name__ == '__main__':
             json.dump(issue_json, f, indent=2)
     else:
         logging.debug(f'Issue data:\n{json.dumps(issue_json, indent=2)}')
-        processor.process_issue(issue, args.comment, args.user, args.component, args.time, args.story)
-        
+        processor.process_issue(issue, args.comment, args.user, args.component, args.time, args.story, args.parent)
