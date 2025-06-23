@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from jira import JIRA
 import csv
 import os
@@ -10,44 +11,60 @@ class JiraConfig:
     TOKEN = os.getenv('JIRA_TOKEN')
     JQL = 'project = "PROJECT_NAME" AND status = Done AND labels = Auto-close-ticket AND created >= startOfDay(-1) AND created <= endOfDay(-1) ORDER BY priority DESC, created DESC'
 
-OUTPUT = 'auto-close.csv'
-REASON_INFORMATIONAL = [
-    'Reason 1',
-    'Reason 2'
-]
-REASON_INTERNAL_PHISHING = [
-    'Reason 1',
-    'Reason 2'
-]
-
 jira = JIRA(server=JiraConfig.URL, basic_auth=(JiraConfig.USER, JiraConfig.TOKEN))
 issues = jira.search_issues(JiraConfig.JQL, maxResults=-1)
 
-review_day = datetime.now().strftime('%m/%d/%Y')
+REASONS_SUMMARY = {
+    'Reason 1': 'Reason 1 Comment',
+    'Reason 2': 'Reason 2 Comment',
+}
+REASONS_COMMENTS = {
+    'Reason 1': 'Reason 1 Comment',
+}
+REASONS_LABELS = {
+    'Reason 1': 'Reason 1 Comment',
+}
 
-def get_reason(summary):
-    reason = 'REVIEW REQUIRED'
-    if any(substring in summary for substring in REASON_INFORMATIONAL):
-        reason = 'Informational'
-    elif any(substring in summary for substring in REASON_INTERNAL_PHISHING):
-        reason = 'Internal Phishing Exercise'
+def get_reason(issue):
+    summary = issue.fields.summary
+    for reason, label in REASONS_SUMMARY.items():
+        if reason in summary:
+            return label
+        
+    comments = issue.fields.comment.comments
+    for comment in comments:
+        for reason, label in REASONS_COMMENTS.items():
+            if reason in comment.body:
+                return label
 
-    return reason
+    component = issue.fields.components[0].name
+    if component != 'Other':
+        return component
 
+    labels = issue.fields.labels
+    if 'Informational' in labels:
+        return 'Informational'
+
+    return 'REVIEW REQUIRED'
+
+review_day = datetime.now().strftime('%m_%d_%Y')
+output = Path(f'Auto-closed tickets review {review_day}.csv')
 headers = ['Date','Ticket ID','Ticket URL','Ticket Summary','Auto-Close Reason','Review Status','Reviewer','Review Comments','Action Taken','Reopen Reason','Task Ticket']
-with open(OUTPUT, mode='w', newline='', encoding='cp1255') as file:
+
+# with open(output, mode='w', newline='', encoding='cp1255') as file:
+with open(output, mode='w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
     writer.writerow(headers)
+    review_day = datetime.now().strftime('%m/%d/%Y')
 
     for issue in issues:
         issue_url = f'{JiraConfig.URL}/browse/{issue.key}'
         summary = issue.fields.summary
 
-        reason = get_reason(summary)
+        reason = get_reason(issue)
         status = 'Pending Review' if reason == 'REVIEW REQUIRED' else 'Reviewed'
         action = '' if reason == 'REVIEW REQUIRED' else 'Legitimate auto-closure'
 
-        writer.writerow([review_day, issue.key, issue_url, summary, reason, status, 'USERNAME', '', action, 'N/A', ''])
+        writer.writerow([review_day, issue.key, issue_url, summary, reason, status, 'Jira User', '', action, 'N/A', ''])
 
-    print(f'Reviewed {len(issues)} tickets. Output saved to {OUTPUT}.')
-
+    print(f'Reviewed {len(issues)} tickets. Output saved to \n& "{output}".')
