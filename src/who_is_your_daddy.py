@@ -15,7 +15,7 @@ def get_whois_data(domain):
         else:
             value = str(value)
         
-        result.append([key, value])
+        result.append([key.replace('_', ' ').title(), value])
 
     return result
 
