@@ -1,1 +1,2 @@
-1. ColorCodeTableExtension: Google Sheets AppsScript code, can be used to colorify table for analysis (~splunk vibes). ([src](https://gist.github.com/xHacka/da5ae1f2f150548cf60d1eae64e5a858))
+1. **ColorCodeTableSheets.osts** - Google Sheets Apps Script that color-codes tables to make pattern analysis easier (think Splunk-style visual vibes). ([source](https://gist.github.com/xHacka/da5ae1f2f150548cf60d1eae64e5a858))
+2. **ColorCodeTableExcel.osts** – Excel-focused variant that applies color-coding to tables directly in Excel, helping highlight patterns, anomalies, and trends in data for easier visual analysis.

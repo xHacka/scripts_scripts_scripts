@@ -1,12 +1,16 @@
-# All The Mods 9 To The Sky (ATM9TTS)
+# **All The Mods 9 To The Sky (ATM9TTS)**
 
-Scripts for ATM9TTS modpack.
+Automation scripts designed for the ATM9TTS modpack to simplify repetitive in-game actions.
 
-Right click hold -> hold Y to spam Right Click
-- Useful in general
-Right click toggle -> press Y to toggle spam Right Click
-- Useful for sifting
-Right click hold and shift -> press Y to toggle Right Click hold and Shift spamming
-- Useful for crop farming
+## **Scripts**
 
-> Code for getting coordinates: https://stackoverflow.com/a/24567802
+* **right_click_hold.py** – Hold **Y** to continuously spam right-click.
+  *Useful for general automation.*
+
+* **right_click_toggle.py** – Press **Y** once to toggle continuous right-click.
+  *Ideal for sifting and similar tasks.*
+
+* **right_click_hold_and_shift.py** – Press **Y** to toggle continuous right-click while holding **Shift**.
+  *Great for crop farming and bulk interactions.*
+
+> Coordinate detection code reference: [https://stackoverflow.com/a/24567802](https://stackoverflow.com/a/24567802)
