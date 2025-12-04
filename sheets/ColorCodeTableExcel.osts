@@ -1,0 +1,73 @@
+function main(workbook: ExcelScript.Workbook) {
+    colorCodeTable(workbook);
+}
+
+function colorCodeTable(workbook: ExcelScript.Workbook) {
+    const sheet = workbook.getActiveWorksheet();
+    const range = sheet.getUsedRange();
+    
+    if (!range) {
+        console.log("No data found in the worksheet.");
+        return;
+    }
+
+    const values = range.getValues();
+    const numRows = values.length;
+    const numCols = values[0].length;
+
+    // Initialize the color map for each column
+    const colorMaps: { [key: string]: { bgColor: string; textColor: string } }[] = 
+        new Array(numCols).fill(null).map(() => ({}));
+
+    // Generate color assignments and apply them
+    for (let col = 0; col < numCols; col++) {
+        const colorMap = colorMaps[col];
+        
+        for (let row = 1; row < numRows; row++) { // Start from row 1 to skip header
+            const value = values[row][col];
+            if (!value && value !== 0) continue; // Skip blank cells
+
+            const valueKey = String(value);
+
+            // Assign color if it's a new value in this column
+            if (!colorMap[valueKey]) {
+                const bgColor = getRandomColor();
+                colorMap[valueKey] = { 
+                    bgColor: bgColor, 
+                    textColor: getContrastingTextColor(bgColor) 
+                };
+            }
+
+            // Get the cell and apply colors
+            const cell = range.getCell(row, col);
+            cell.getFormat().getFill().setColor(colorMap[valueKey].bgColor);
+            cell.getFormat().getFont().setColor(colorMap[valueKey].textColor);
+        }
+    }
+}
+
+function getRandomColor(): string {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+function getContrastingTextColor(bgColor: string): string {
+    const rgb = hexToRgb(bgColor);
+    // https://www.w3.org/WAI/GL/wiki/Relative_luminance
+    const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+    // Return white text for dark backgrounds, black text for light backgrounds
+    return luminance > 0.5 ? '#000000' : '#FFFFFF';
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const bigint = parseInt(hex.slice(1), 16);
+    return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255
+    };
+}
