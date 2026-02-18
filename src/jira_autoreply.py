@@ -81,8 +81,14 @@ class JiraProcessor:
     def set_component(self, issue, component):
         """Sets the component of a Jira issue."""
         try:
-            issue.update(fields={'components': [{'name': component}]})
-            logging.info(f'Set component of {issue.key} to {component}')
+            component_id = next((c.id for c in self.jira.project_components(issue.fields.project.key) if c.name.strip() == component), None)
+            if not component_id:
+                err = f'Component "[{component_id}]{component}" not found in project {issue.fields.project.key}'
+                logging.warning(err)
+                raise Exception(err)
+            else:
+                issue.update(fields={'components': [{'id': component_id}]})
+                logging.info(f'Set component of {issue.key} to {component}[{component_id}]')
         except Exception as e:
             logging.error(f'Failed to set component for ticket {issue.key}: {e}')
             raise
@@ -119,7 +125,11 @@ class JiraProcessor:
         try:
             transition_name = issue.fields.status.name
             logging.info(f'Processing issue {issue.key} with current status: {transition_name}')
-    
+
+            if transition_name == 'Done':
+                logging.info(f'Issue {issue.key} is already in Done status, skipping further processing.')
+                return
+
             # Assign the parent issue if provided
             if parent:
                 self.set_parent(issue, parent)
@@ -264,4 +274,4 @@ if __name__ == '__main__':
             json.dump(issue_json, f, indent=2)
     else:
         logging.debug(f'Issue data:\n{json.dumps(issue_json, indent=2)}')
-        processor.process_issue(issue, args.comment, args.user, args.component, args.time, args.story, args.parent)
+        processor.process_issue(issue, args.comment, args.user, args.component.strip(), args.time, args.story, args.parent)
